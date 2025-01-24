@@ -1,0 +1,24 @@
+plugins {
+	id 'application'
+}
+
+group = 'com.bingo'
+version = '0.0.1-SNAPSHOT'
+
+application {
+	mainClass = 'com.bingo.Main'
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+}
+test {
+	useJUnitPlatform()
+}
+
+
+
