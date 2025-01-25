@@ -87,3 +87,28 @@ the problem and we found a pattern to generate the gaps per strip based on this:
 ## Other considerations
    As said, we considered to use as many primitives as possible to reduce memory consumption. That's why we implemented
    custom Deque (ShortDeque) and some Custom Collections methods to avoid using Java Collections.
+   
+## Testing
+   We have implemented some unit tests to check the correctness of the solution. Each test checks a different part of the
+    solution:
+    - We check the generation of the strip of 6 tickets, checking the number of tickets, rows, columns, and numbers per ticket.
+    - We check the generation of the gaps per strip, checking the number of gaps per column and strip.
+    - We check the generation of the numbers per strip, checking the number of numbers per strip and the non-repetition of the numbers.
+    - We check the ordering of the numbers per column and strip.
+
+   Furthermore, just to be sure we run our solution in time below 1 second, we created a performance test, which generates
+   50 times 10k Strip. So we check in each iteration we got a less execution of 1 second and we also check the average
+   of those 50 iterations.
+   
+   It can be checked running:
+   ```sh
+   .\gradlew test
+   ```
+   After being run, there will be a report in the following path: ```.\build\reports\tests\test\index.html``` where you can check
+    the results of the tests and even the performance test results. Check in the Standard Output section to see the performance test results.
+## Running the application
+   The application can be run executing the following command:
+   ```sh
+   .\gradlew run
+   ```
+   After being run, you will see the output of the 6 tickets generated.
