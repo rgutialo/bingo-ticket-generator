@@ -13,7 +13,7 @@ public class Ticket {
     public static final short ROWS = 3;
     public static final short COLUMNS = 9;
     public static final int GAPS_PER_ROW = 4;
-    private final byte[][] matrix = new byte[ROWS][COLUMNS];
+    final byte[][] matrix = new byte[ROWS][COLUMNS];
     private final short[] gapsPerRow = {0, 0, 0};
 
     /**

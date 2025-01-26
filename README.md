@@ -44,20 +44,19 @@ production, we must consider the memory consumption taking into account the numb
 short (2 bytes) and byte(1 byte) primitives as much as possible instead of int (4 bytes) or any other complex object provided
 by Java (Integer, Byte, Short, etc) (16 bytes).
 2. **Time consumption.** Just to get the 10k strip in less than one second, we need to define an algorithm as less complex as possible 
-to reach this value. In this case, we checked the most complexity part is to generate random gaps per ticket and strip. So we analyzed
-the problem and we found a pattern to generate the gaps per strip based on this:
-    - Total gaps of first column per strip are 9
-    - Second column, third column and so on until eighth column, there are 8 gaps per strip.
-    - Last column, we have 7 gaps per strip.
-    - Each ticket has 12 gaps and each row of the ticket has 4 gaps and 5 numbers. Because of we haven't 3 gaps in the
+to reach this value. In this case, we checked the most complexity part is to generate random gaps. So we analyzed
+the problem, and we found a pattern to generate the gaps per strip based on this:
+    First, we analyze gaps per rows:
+    - Each ticket has 12 gaps and each row of the ticket has 4 gaps and 5 numbers. Because we haven't 3 gaps in the
    same column, that means we have at least 1 gap per column (9 gaps counted for now) and so we need to fill 3 more gaps
    which means there are 3 columns with 2 gaps. If we represent gaps in an array, one example could be (1,2,2,2,1,1,1,1,1).
    
    Now we need to analyze how many gaps we have per column and strip:
     - First column has 9 numbers per strip [0-9]. So we have 9 gaps.
-    - Second column, third column and so on until eighth column, there are 10 numbers per strip ([10-19], [20-29], ..., [70-79]). So we have 8 gaps.
-    - Last column, we have 11 numbers per strip [80-90]. So we have 7 gaps.
-  So, having 9+(8*7)+7 = 72 gaps in total per strip, we can generate matrix of gaps per strip following previous rules. One example could be: 
+    - Second column, third column and so on until eighth column, there are 10 numbers per strip ([10-19], [20-29], ..., [70-79]). So we have 8 gaps per each.
+    - Last column has 11 numbers per strip [80-90]. So we have 7 gaps.
+    - Having all these previous calculations, we have 9+(8*7)+7 = 72 gaps in total per strip so we can generate a
+    - static matrix of gaps following previous rules. One example could be: 
 ```
             | [1-9] |[10-19]|[20-29]|[30-39]|[40-49]|[50-59]|[60-69]|[70-79]|[80-90]|| SUM ROWS  |
             |-------|-------|-------|-------|-------|-------|-------|-------|-------||-----------|
@@ -71,22 +70,29 @@ the problem and we found a pattern to generate the gaps per strip based on this:
             |   9   |   8   |   8   |   8   |   8   |   8   |   8   |   8   |   7   ||SUM COLUMNS|
 ```
    With that example, we know how many '2' values are available per column and strip and can be mapped to this array:
-   (3,2,2,2,2,2,2,2,1)
+   (3,2,2,2,2,2,2,2,1). 
 
-   So, how can we dynamically crete valid matrix gaps per strip?. For that, we follow backtracking strategy so we check
-   every value added to matrix doesn't violate the rules described before. Just to avoid repeated sums per row and column,
-   we have temporary variables which store the sum of rows and columns updated. It's part of the improvement of the backtracking solution.
+   So, how can we dynamically instantiate this static matrix gaps to generate all strips we want and having a
+   good time-response?. For that, we follow backtracking strategy so we check every value added to matrix doesn't
+   violate the rules described before. Just to avoid repeated sums per row and column, we have temporary variables
+   which store the sum of rows and columns updated. It's part of the improvement of the backtracking solution.
 
-   Once gaps problem is solved, we need to generate (non-repeated) numbers per strip. We could use randoms to generate values
-   between 1-90 and check if the number is not repeated in the strip. But this is not so efficient, so we decided to instantiate statically
-   numbers, shuffle them and move the structure to a Deque (FIFO) structure solution. So, if we generated non repeated 1-90 numbers,
-   we shuffle them and move the structure to a deque, we don't need to check repeated numbers.
+   Once gaps matrix problem has been solved, it's really easy to generate (non-repeated) numbers per strip!
+   We could use randoms to generate values between 1-90 and check if the number is not repeated in the strip.
+   But this is not so efficient, so we decided to instantiate statically numbers, shuffle them and map the structure
+   to a Deque (FIFO) structure solution (grouped by tens). So, if we generated non-repeated 1-90 numbers, we shuffle them and move
+   the structure to a deque, we don't need to check repeated numbers. Cool!
 
-   Finally, we just need to order ascendingly the numbers per column and strip and its done!
+   Having in mind we calculated gaps per ticket and strip, we just need 15 numbers to complete a ticket. Magic!
+   With all this information, we can generate as many tickets as we want, all different and with lightweight random implementation
+   (we share our gaps matrix between strips).
+
+   Finally, we just need to order ascendingly the numbers per column and strip, and it's done!
    
 ## Other considerations
    As said, we considered to use as many primitives as possible to reduce memory consumption. That's why we implemented
-   custom Deque (ShortDeque) and some Custom Collections methods to avoid using Java Collections.
+   custom Deque (ShortDeque) and some Custom Collections methods to avoid using Java Collections. It's less time-consuming using
+   primitives agains Java Objects (memory overhead).
    
 ## Testing
    We have implemented some unit tests to check the correctness of the solution. Each test checks a different part of the
