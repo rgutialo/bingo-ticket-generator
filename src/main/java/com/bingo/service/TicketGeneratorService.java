@@ -4,12 +4,18 @@ import com.bingo.model.StripTicket;
 import com.bingo.model.Ticket;
 import com.bingo.service.model.ShortDeque;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Random;
 
+/**
+ * Class responsible for generating bingo tickets
+ */
 public class TicketGeneratorService {
 
     private static final short[] BINGO_NUMBERS = new short[90];
     private static final short MAX_NUMBER = 90;
+    private static final short TICKET_COLUMNS = 9;
+    private static final short NUMBERS_PER_TICKET = 15;
 
     static {
         for (short i = 1; i <= MAX_NUMBER; i++) {
@@ -39,45 +45,18 @@ public class TicketGeneratorService {
      * @param numbersGroupedByTens deque array of shuffled numbers grouped by tens
      */
     private static void fillTicketsWithNumbers(StripTicket ticketStrip, ShortDeque[] numbersGroupedByTens) {
-        for (int i = 0; i < ticketStrip.getTickets().length; i++) {
-            final Ticket currentTicket = ticketStrip.getTickets()[i];
-            for (int j = 0; j < Ticket.COLUMNS; j++) {
-                for (int k = 0; k < Ticket.ROWS; k++) {
-                    if (!currentTicket.isGap(k, j) && !numbersGroupedByTens[j].isEmpty()) {
-                        currentTicket.getMatrix()[k][j] = (byte) numbersGroupedByTens[j].removeFirst();
-                    }
-                }
-            }
-        }
-        orderNumbersPerColumn(ticketStrip);
-    }
-
-    /**
-     * Orders the numbers in each column of the ticket strip
-     *
-     * @param ticketStrip ticketcks in strip to order
-     */
-    private static void orderNumbersPerColumn(StripTicket ticketStrip) {
         for (short i = 0; i < ticketStrip.getTickets().length; i++) {
-            final Ticket currentTicket = ticketStrip.getTickets()[i];
-            for (short j = 0; j < Ticket.COLUMNS; j++) {
-                List<Byte> columnValues = new ArrayList<>();
-
-                for (short k = 0; k < Ticket.ROWS; k++) {
-                    if (!currentTicket.isGap(k, j)) {
-                        columnValues.add(currentTicket.getMatrix()[k][j]);
-                    }
-                }
-
-                Collections.sort(columnValues);
-
-                short index = 0;
-                for (short k = 0; k < Ticket.ROWS; k++) {
-                    if (!currentTicket.isGap(k, j)) {
-                        currentTicket.setValueInTicket(k, j, columnValues.get(index++));
-                    }
+            short[] ticketGapsPerNeededPerColumn = StripTicket.getTicketGapsPerColumn(i);
+            short[] ticketNumbersNeededPerColumn = StripTicket.getTicketMissingNumbersPerColumn(i);
+            short[] numbers = new short[NUMBERS_PER_TICKET];
+            int numberIndex = 0;
+            for (int j = 0; j < TICKET_COLUMNS; j++) {
+                for (int k = 0; k < ticketNumbersNeededPerColumn[j]; k++) {
+                    numbers[numberIndex] = numbersGroupedByTens[j].removeFirst();
+                    numberIndex++;
                 }
             }
+            ticketStrip.getTickets()[i] = new Ticket(ticketGapsPerNeededPerColumn, numbers);
         }
     }
 
@@ -89,7 +68,7 @@ public class TicketGeneratorService {
      */
     private static ShortDeque[] mapMatrixBingoNumbersToDeques(short[][] bingoNumbers) {
         final ShortDeque[] numbersGroupedByTens = new ShortDeque[9];
-        for (short i = 0; i < Ticket.COLUMNS; i++) {
+        for (short i = 0; i < TICKET_COLUMNS; i++) {
             numbersGroupedByTens[i] = ShortDeque.fromArray(bingoNumbers[i]);
         }
         return numbersGroupedByTens;
@@ -103,7 +82,7 @@ public class TicketGeneratorService {
     static short[][] initializeBingoNumbers() {
         final short[][] bingoNumbers = new short[9][11];
 
-        for (int i = 0; i < Ticket.COLUMNS; i++) {
+        for (int i = 0; i < TICKET_COLUMNS; i++) {
             if (i == 0)
                 bingoNumbers[i] = Arrays.copyOfRange(BINGO_NUMBERS, 0, 9);
             else if (i == 8)
@@ -120,7 +99,7 @@ public class TicketGeneratorService {
      * @param numbersMatrix matrix of numbers to shuffle by row
      */
     static void shuffleNumbers(short[][] numbersMatrix) {
-        for (int i = 0; i < Ticket.COLUMNS; i++) {
+        for (int i = 0; i < TICKET_COLUMNS; i++) {
             shuffleRowNumbers(numbersMatrix[i]);
         }
     }
@@ -139,6 +118,4 @@ public class TicketGeneratorService {
             array[j] = temp;
         }
     }
-
-
 }

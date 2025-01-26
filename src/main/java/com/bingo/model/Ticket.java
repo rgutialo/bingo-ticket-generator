@@ -1,15 +1,19 @@
 package com.bingo.model;
 
+import java.util.Arrays;
+
 /**
  * Class which represents a ticket with 3 rows and 9 columns.
  */
 public class Ticket {
     private static final String TICKET_HEADER = "****************T I C K E T ****************\n";
     private static final String TICKET_FOOTER = "********************************************\n";
+    private static final short NUMBERS_PER_TICKET = 15;
+    private static final short GAPS_PER_TICKET = 12;
     public static final short ROWS = 3;
     public static final short COLUMNS = 9;
     public static final int GAPS_PER_ROW = 4;
-    private final byte[][] matrix = new byte[ROWS][COLUMNS];
+    final byte[][] matrix = new byte[ROWS][COLUMNS];
     private final short[] gapsPerRow = {0, 0, 0};
 
     /**
@@ -24,34 +28,27 @@ public class Ticket {
     }
 
     /**
-     * Returns the matrix of the ticket.
+     * Constructor which initializes the ticket with the given gaps per column and ticket numbers.
      *
-     * @return the matrix of the ticket.
+     * @param gapsPerColumn gaps per column
+     * @param ticketNumbers numbers to fill the ticket
+     * @throws IllegalArgumentException if the gaps per column or ticket numbers are invalid
      */
-    public byte[][] getMatrix() {
-        return this.matrix;
+    public Ticket(short[] gapsPerColumn, short[] ticketNumbers) throws IllegalArgumentException {
+        validateIncomingParams(gapsPerColumn, ticketNumbers);
+        for (int i = 0; i < ROWS; i++) {
+            for (int j = 0; j < COLUMNS; j++) {
+                setValueInTicket((short) i, (short) j, (byte) 0);
+            }
+        }
+        fillGaps(gapsPerColumn);
+        fillNumbers(ticketNumbers);
     }
 
-    /**
-     * Sets the value in the given row and column of the ticket.
-     * @param row row of the matrix
-     * @param column column of the matrix
-     * @param value value to set in the given row and column.
-     */
-    public void setValueInTicket(short row, short column, byte value) {
-        this.matrix[row][column] = value;
-    }
-
-    /**
-     * Checks if the given row and column is a gap.
-     *
-     * @param row    row of the matrix
-     * @param column column of the matrix
-     * @return true if the given row and column is a gap, false otherwise.
-     */
-
-    public boolean isGap(int row, int column) {
-        return matrix[row][column] == -1;
+    short getNumberInRowAndColumn(short row, short column) {
+        if (row < 0 || row > ROWS || column < 0 ||column > COLUMNS)
+            throw new IllegalArgumentException("Cannot be obtained any value from ticket: Invalid row and column");
+        return matrix[row][column];
     }
 
     /**
@@ -77,6 +74,98 @@ public class Ticket {
     }
 
     /**
+     * Validates the incoming parameters for the ticket.
+     *
+     * @param gapsPerColumn gaps per column of the ticket
+     * @param ticketNumbers numbers to fill the ticket
+     */
+    static void validateIncomingParams(short[] gapsPerColumn, short[] ticketNumbers) {
+        if (gapsPerColumn == null || ticketNumbers == null) {
+            throw new IllegalArgumentException("Ticket cannot be created: Received null parameters for gaps or numbers");
+        }
+        if (gapsPerColumn.length != COLUMNS) {
+            throw new IllegalArgumentException("Ticket cannot be created: Invalid parameter for gaps: Received gaps array of size " + gapsPerColumn.length + " instead of " + COLUMNS);
+        }
+        short totalGaps = 0;
+        for (short i = 0; i < gapsPerColumn.length; i++) {
+            if (gapsPerColumn[i] < 0) {
+                throw new IllegalArgumentException("Ticket cannot be created: Invalid parameter for gaps: Received negative value for gaps in column " + i);
+            }
+            totalGaps += gapsPerColumn[i];
+        }
+        if (totalGaps != GAPS_PER_TICKET) {
+            throw new IllegalArgumentException("Ticket cannot be created: Invalid parameter for gaps: Received total of " + totalGaps + " gaps instead of " + GAPS_PER_TICKET);
+        }
+        if (ticketNumbers.length != NUMBERS_PER_TICKET) {
+            throw new IllegalArgumentException("Ticket cannot be created: Invalid parameter for numbers: Received numbers array of size " + ticketNumbers.length + " instead of " + NUMBERS_PER_TICKET);
+        }
+    }
+
+    /**
+     * Fills the ticket with the given numbers.
+     *
+     * @param ticketNumbers numbers to fill the ticket
+     */
+
+    private void fillNumbers(short[] ticketNumbers) {
+        int column;
+        Arrays.sort(ticketNumbers);
+        for (short i = 0; i < NUMBERS_PER_TICKET; i++) {
+            if (ticketNumbers[i] == 90) {
+                column = 8;
+            } else if (ticketNumbers[i] % 10 == 0) {
+                column = (ticketNumbers[i]) / 10;
+            } else {
+                column = (ticketNumbers[i] - 1) / 10;
+            }
+            for (short row = 0; row < Ticket.ROWS; row++) {
+                if (!isGap(row, column) && !isFilled(row, column)) {
+                    setValueInTicket(row, (short) column, (byte) ticketNumbers[i]);
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Sets the value in the given row and column of the ticket.
+     *
+     * @param row    row of the matrix
+     * @param column column of the matrix
+     * @param value  value to set in the given row and column.
+     */
+    void setValueInTicket(short row, short column, byte value) {
+        this.matrix[row][column] = value;
+    }
+
+    /**
+     * Checks if the given row and column is a gap.
+     *
+     * @param row    row of the matrix
+     * @param column column of the matrix
+     * @return true if the given row and column is a gap, false otherwise.
+     */
+
+    boolean isGap(int row, int column) {
+        return matrix[row][column] == -1;
+    }
+
+    /**
+     * Checks if the given row and column is filled.
+     *
+     * @param row    row
+     * @param column column
+     * @return true if the given row and column is filled, false otherwise.
+     */
+
+    private boolean isFilled(int row, int column) {
+        if (isGap(row, column)) {
+            return true;
+        }
+        return matrix[row][column] != 0;
+    }
+
+    /**
      * Checks which row has the least number of gaps.
      *
      * @return the row with the least number of gaps.
@@ -96,7 +185,7 @@ public class Ticket {
      *
      * @param gapsPerColumn array of gaps per column.
      */
-    public void fillGaps(short[] gapsPerColumn) {
+    private void fillGaps(short[] gapsPerColumn) {
         for (short column = 0; column < gapsPerColumn.length; column++) {
             short rowSelected;
             for (short j = 0; j < gapsPerColumn[column]; j++) {

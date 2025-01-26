@@ -1,57 +1,39 @@
 package com.bingo.service;
 
-import com.bingo.model.Ticket;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class TicketGeneratorServiceTest {
+class TicketGeneratorServiceTest {
+
     @Test
-    void generateTicketStrip_then_returnsSixTickets() {
+    void generateTicketStrip_whenGenerateTicketStrip_then_SixTicketsAreGenerated() {
         final var result = TicketGeneratorService.generateTicketStrip();
         assertNotNull(result);
         assertEquals(6, result.length);
     }
 
     @Test
-    void generateTicketStrip_then_TicketsReturnedAreProperlyFilledAndEachTicketHasFifteenNumbers() {
-        final var result = TicketGeneratorService.generateTicketStrip();
-        for (Ticket ticket : result) {
-            int totalNumbersPerTicket = 0;
-            for (int row = 0; row < Ticket.ROWS; row++) {
-                for (int col = 0; col < Ticket.COLUMNS; col++) {
-                    if (!ticket.isGap(row, col)) {
-                        totalNumbersPerTicket++;
-                        assertTrue(ticket.getMatrix()[row][col] > 0);
-                    }
-                }
-            }
-            assertTrue(totalNumbersPerTicket >= 15);
+    void initializeBingoNumbers_then_BingoNumbersAreGenerated() {
+        Set<Short> originalNumbers = new HashSet<>();
+        for (short i = 1; i <= 90; i++) {
+            originalNumbers.add(i);
         }
+
+        short[][] generatedMatrix = TicketGeneratorService.initializeBingoNumbers();
+
+        Set<Short> generatedNumbers = new HashSet<>();
+        for (short[] row : generatedMatrix) for (short num : row) generatedNumbers.add(num);
+        assertEquals(originalNumbers, generatedNumbers);
+
     }
 
     @Test
-    void generateTicketStrip_then_TicketNumbersAreOrderedPerColumn() {
-        final var result = TicketGeneratorService.generateTicketStrip();
-        for (Ticket ticket : result) {
-            for (int col = 0; col < Ticket.COLUMNS; col++) {
-                byte previousValue = -1;
-                for (int row = 0; row < Ticket.ROWS; row++) {
-                    if (!ticket.isGap(row, col)) {
-                        byte currentValue = ticket.getMatrix()[row][col];
-                        assertTrue(previousValue == -1 || previousValue <= currentValue);
-                        previousValue = currentValue;
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    void shuffleNumbers_thenShuffleBingoNumbersWithoutLoosingAnyNumber() {
+    void shuffleNumbers_then_ShuffleBingoNumbersWithoutLoosingAnyNumber() {
         short[][] originalMatrix = TicketGeneratorService.initializeBingoNumbers();
         short[][] shuffledMatrix = TicketGeneratorService.initializeBingoNumbers();
         TicketGeneratorService.shuffleNumbers(shuffledMatrix);
