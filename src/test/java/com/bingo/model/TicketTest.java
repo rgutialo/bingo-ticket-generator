@@ -1,66 +1,84 @@
 package com.bingo.model;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class TicketTest {
 
     @Test
-    void ticket_constructor() {
-        final Ticket ticket = new Ticket();
-        final var result = ticket.getMatrix();
-        assertEquals(Ticket.ROWS, result.length);
-        assertEquals(Ticket.COLUMNS, result[0].length);
-
-        for (int i = 0; i < Ticket.ROWS; i++) {
-            for (int j = 0; j < Ticket.COLUMNS; j++) {
-                assertEquals(0, result[i][j]);
+    void ticket_defaultConstructor() {
+        final var result = new Ticket();
+        for (short i = 0; i < Ticket.ROWS; i++) {
+            for (short j = 0; j < Ticket.COLUMNS; j++) {
+                assertEquals(0, result.getNumberInRowAndColumn(i,j));
             }
+        }
+    }
+
+    @Test
+    void ticket_when_ValidParametersAreReceived_then_TicketIsCreatedWith12GapsAnd15Numbers() {
+        short[] gapsPerColumn = {2, 1, 2, 1, 1, 2, 1, 1, 1};
+        short[] ticketNumbers = {1, 10, 14, 22, 32, 38, 44, 49, 56, 61, 68, 73, 77, 85, 89};
+        final var result = new Ticket(gapsPerColumn, ticketNumbers);
+        assertNotNull(result);
+
+        int gapCount = 0;
+        int numberCount = 0;
+        for (short i = 0; i < Ticket.ROWS; i++) {
+            for (short j = 0; j < Ticket.COLUMNS; j++) {
+                if (result.isGap(i, j)) {
+                    gapCount++;
+                }
+                else if (result.getNumberInRowAndColumn(i,j) != 0){
+                    numberCount++;
+                }
+            }
+        }
+        assertEquals(12, gapCount);
+        assertEquals(15, numberCount);
+    }
+
+    @Test
+    void ticket_when_ValidParamsReceived_then_TicketGeneratedHas4GapsPerRow() {
+        short[] gapsPerColumn = {2, 1, 2, 1, 1, 2, 1, 1, 1};
+        short[] ticketNumbers = {1, 10, 14, 22, 32, 38, 44, 49, 56, 61, 68, 73, 77, 85, 89};
+        final var result = new Ticket(gapsPerColumn, ticketNumbers);
+        for (short i = 0; i < Ticket.ROWS; i++) {
+            int rowGaps = 0;
+            for (short j = 0; j < Ticket.COLUMNS; j++) {
+                if (result.getNumberInRowAndColumn(i,j) == -1) {
+                    rowGaps++;
+                }
+            }
+            assertEquals(4, rowGaps);
         }
     }
 
     @Test
     void isGap_when_ThereIsAGapInRowAndColumnReceived_then_TrueIsReturned() {
-        final Ticket ticket = new Ticket();
-        ticket.setValueInTicket((short) 0,(short)0, (byte)-1);
-        assertTrue(ticket.isGap(0, 0));
+        final var result = new Ticket();
+        result.setValueInTicket((short) 0,(short)0, (byte)-1);
+        assertTrue(result.isGap(0, 0));
     }
 
     @Test
     void isGap_when_ThereIsNOGapInRowAndColumnReceived_then_FalseIsReturned() {
-        final Ticket ticket = new Ticket(); //By default, all values are 0
+        final Ticket ticket = new Ticket();
         assertFalse(ticket.isGap(0, 0));
     }
 
     @Test
-    void fillGaps_when_GapsArrowIsReceived_then_GapsInTicketAreCorrectlySet() {
-        final Ticket ticket = new Ticket();
-        final short[] gapsPerColumn = {1, 1, 1, 1, 1, 1, 1, 1, 1};
-        ticket.fillGaps(gapsPerColumn);
-
-        int gapCount = 0;
-        for (int i = 0; i < Ticket.ROWS; i++) {
-            for (int j = 0; j < Ticket.COLUMNS; j++) {
-                if (ticket.isGap(i, j)) {
-                    gapCount++;
-                }
-            }
-        }
-
-        assertEquals(9, gapCount);
+    void validateIncomingParams_when_InvalidGapsParamReceived_then_IllegalArgumentExceptionThrown() {
+        short[] invalidGaps = {2, 1, 2, 1, 1, 2, 1, 2};
+        short[] ticketNumbers = {3, 8, 14, 22, 26, 32, 38, 44, 49, 56, 61, 73, 77, 85, 89};
+        assertThrows(IllegalArgumentException.class, () -> Ticket.validateIncomingParams(invalidGaps, ticketNumbers));
     }
 
     @Test
-    void setValueInTicket_when_ValueReceivedForRowAndColumn_then_ValueIsCorrectlySet() {
-        final short row = 2;
-        final short column = 3;
-        final byte value = 5;
-        final Ticket ticket = new Ticket();
-
-        ticket.setValueInTicket(row, column, value);
-
-        assertEquals(value, ticket.getMatrix()[row][column]);
+    void validateIncomingParams_when_InvalidNumbersParamReceived_then_IllegalArgumentExceptionThrown() {
+        short[] gapsPerColumn = {2, 1, 2, 1, 1, 2, 1, 2, 1};
+        short[] invalidNumbers = {3, 8, 14, 22}; // Too few numbers
+        assertThrows(IllegalArgumentException.class, () -> Ticket.validateIncomingParams(gapsPerColumn, invalidNumbers));
     }
 }

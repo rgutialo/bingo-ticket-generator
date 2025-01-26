@@ -20,17 +20,15 @@ public class CustomCollections {
 
     public static void reverse(short[] array) {
         if (array == null || array.length <= 1) {
-            return; // No need to reverse if null or single element
+            return;
         }
 
         int left = 0, right = array.length - 1;
         while (left < right) {
-            // Swap elements
             short temp = array[left];
             array[left] = array[right];
             array[right] = temp;
 
-            // Move pointers
             left++;
             right--;
         }
